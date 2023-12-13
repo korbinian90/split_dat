@@ -4,6 +4,8 @@
 
 Download and install [julia](https://julialang.org/). Optionally install julia vscode extension.
 
+Clone the repository.
+
 ## Usage
 
 Modify the paths in `dat_split_water_metabolite.jl`  
