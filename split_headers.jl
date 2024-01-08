@@ -23,16 +23,10 @@ function split_dat(filename, f_out; n_channels, select)
         pos = position(io)
         # seek io to beginning of file
         seek(io, 0)
-        write(out, read(io, pos))
-        seek(io, offset)
+        write(out, read(io, offset))
 
         for i_scan = 1:file_header.n_scans
-            pos_begin = position(io)
-            skip_twix(io)
-            pos = position(io)
-            # seek io to beginning of file
-            seek(io, pos_begin)
-            write(out, read(io, pos - pos_begin))
+            write_and_skip_twix!(io, out)
 
             while true
                 pos_begin = position(io)
@@ -42,10 +36,17 @@ function split_dat(filename, f_out; n_channels, select)
                     seek(io, pos_begin)
                     write(out, read(io, 352))
                     pos = position(io)
+                    # adjust in file position to be multiple of 512
                     if mod(pos, 512) > 0
                         pos = pos + 512 - mod(pos, 512)
                     end
                     seek(io, pos)
+                    # adjust out file position to be multiple of 512
+                    pos_write = position(out)
+                    if mod(pos_write, 512) > 0
+                        pos_write2 = pos_write + 512 - mod(pos_write, 512)
+                        write(out, zeros(UInt8, pos_write2 - pos_write))
+                    end
                     break
                 end
 
@@ -61,20 +62,33 @@ function split_dat(filename, f_out; n_channels, select)
                 nbytes = pos_next - pos_begin
 
                 # Decide which scan goes to which file
-                if select(scan)
-                    println(scan.dims)
+                if scan.type == :ONLINE
+                    if select(scan)
+                        seek(io, pos_begin)
+                        bytes = read(io, nbytes)
+                        bytes[set_offset+1] = i_water
+                        i_water += 1
+                        write(out, bytes)
+                    else
+                        seek(io, pos_next) # skip others
+                    end
+                else # write all non :ONLINE scans
                     seek(io, pos_begin)
-                    bytes = read(io, nbytes)
-                    bytes[set_offset+1] = i_water
-                    i_water += 1
-                    write(out, bytes)
-                else
-                    seek(io, pos_next) # skip others
+                    write(out, read(io, nbytes))
                 end
             end
         end
     end
     close(out)
+end
+
+function write_and_skip_twix!(io, out)
+    pos_begin = position(io)
+    skip_twix(io)
+    pos = position(io)    
+    # write twix header
+    seek(io, pos_begin)
+    write(out, read(io, pos - pos_begin))
 end
 
 function skip_twix(io)
