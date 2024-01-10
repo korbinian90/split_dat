@@ -55,7 +55,7 @@ function split_dat(filename, f_out, select)
                 end
 
                 if scan.type == :SYNCDATA
-                    len = 1728
+                    len = scan.sync_length
                     seek(io, pos_begin)
                     write(out, read(io, len))
                     continue
