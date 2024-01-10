@@ -1,16 +1,20 @@
-function split_dat_metabolite(filename, f_out; n_channels, metabolite)
+include("read_twix_protocol.jl")
+
+function split_dat_metabolite(filename, f_out; metabolite)
     println("writing metabolite:")
     select = scan -> scan.dims[SET] in metabolite
-    split_dat(filename, f_out; n_channels, select)
+    split_dat(filename, f_out, select)
 end
 
-function split_dat_water(filename, f_out; n_channels)
+function split_dat_water(filename, f_out)
     println("writing water:")
     select = scan -> scan.ice_param[6] == 1
-    split_dat(filename, f_out; n_channels, select)
+    split_dat(filename, f_out, select)
 end
 
-function split_dat(filename, f_out; n_channels, select)
+function split_dat(filename, f_out, select)
+    n_channels = length(read_twix_protocol(filename)["MeasYaps"]["sCoilSelectMeas"]["aRxCoilSelectData"][1]["asList"])
+
     out = open(f_out, "w")
     open(filename) do io
         set_offset = 40 + 8 + 9 * 2
