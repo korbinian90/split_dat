@@ -1,5 +1,7 @@
 # Split a dat file into parts
 
+**Research use only. Not a medical device. Not intended for diagnosis, treatment or clinical decisions.**
+
 ## Install
 
 Download and install [julia](https://julialang.org/). Optionally install julia vscode extension.
